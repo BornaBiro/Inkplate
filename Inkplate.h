@@ -70,7 +70,7 @@ extern Adafruit_MCP23017 mcp;
 
 #define BLACK 1
 #define WHITE 0
-#define GPIO0_ENABLE 15
+#define GPIO0_ENABLE 8
 #define REF_RATE 6
 #define INKPLATE_1BIT 0
 #define INKPLATE_4BIT 1

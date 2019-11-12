@@ -287,6 +287,7 @@ void Inkplate::display4b() {
       uint8_t pix4;
 
       for (int i = 0; i < 600; i++) {
+		CL_SET;
         GPIO.out_w1tc = DATA;
         CL_CLEAR;
         begin_line();
@@ -483,9 +484,11 @@ void Inkplate::einkOn() {
   Wire.write(0x0C);
   Wire.write(0);
   Wire.endTransmission();
-
+  
   VCOM_SET;
   PWRUP_SET;
+  
+  delay(5);
 }
 
 //Turn off epapewr supply and put all digital IO pins in high Z state
