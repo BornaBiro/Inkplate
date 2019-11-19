@@ -38,7 +38,15 @@ void Inkplate::begin(void) {
   pinMode(25, OUTPUT);
   pinMode(26, OUTPUT);
   pinMode(27, OUTPUT); //D7
-
+  
+  //TOUCHPAD PINS
+  mcp.pinMode(10, INPUT);
+  mcp.pinMode(11, INPUT);
+  mcp.pinMode(12, INPUT);
+  
+  //Battery voltage Switch MOSFET
+  mcp.pinMode(9, OUTPUT);
+  
   //1 bit per pixel mode (monochrome mode)
   if (_displayMode == 0) {
     D_memory_new = (uint8_t*)ps_malloc(600 * 100);
@@ -491,6 +499,21 @@ void Inkplate::einkOn() {
   PWRUP_SET;
   
   delay(5);
+  
+  Wire.beginTransmission(0x48);
+  Wire.write(0x0D);
+  Wire.write(B10000000);
+  Wire.endTransmission();
+  
+  delay(2);
+  
+  Wire.beginTransmission(0x48);
+  Wire.write(0x00);
+  Wire.endTransmission();
+  
+  Wire.requestFrom(0x48, 1);
+  _temperature = Wire.read();
+
 }
 
 //Turn off epapewr supply and put all digital IO pins in high Z state
@@ -613,4 +636,20 @@ void Inkplate::selectDisplayMode(uint8_t _mode) {
 
 uint8_t Inkplate::getDisplayMode() {
   return _displayMode;
+}
+
+uint8_t Inkplate::readTouchpad(uint8_t _pad) {
+  return mcp.digitalRead((_pad&3)+10);
+}
+
+int8_t Inkplate::readTemperature() {
+  return _temperature;
+}
+
+double Inkplate::readBattery() {
+  mcp.digitalWrite(9, HIGH);
+  delay(1);
+  int adc = analogRead(35);
+  mcp.digitalWrite(9, LOW);
+  return (double(adc) / 4095 * 3.3 * 2);
 }

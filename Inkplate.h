@@ -74,6 +74,9 @@ extern Adafruit_MCP23017 mcp;
 #define REF_RATE 6
 #define INKPLATE_1BIT 0
 #define INKPLATE_3BIT 1
+#define PAD1 0
+#define PAD2 1
+#define PAD3 2
 
 static void ckvClock();
 static void usleep1();
@@ -125,8 +128,12 @@ class Inkplate : public Adafruit_GFX {
     void pinsZstate();
     void pinsAsOutputs();
     uint8_t getPanelState();
+	uint8_t readTouchpad(uint8_t);
+	int8_t readTemperature();
+	double readBattery();
 
   private:
+	int8_t _temperature;
     void display1b();
     void display3b();
     uint8_t _panelOn=0;
