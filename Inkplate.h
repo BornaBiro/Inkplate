@@ -73,7 +73,7 @@ extern Adafruit_MCP23017 mcp;
 #define GPIO0_ENABLE 8
 #define REF_RATE 6
 #define INKPLATE_1BIT 0
-#define INKPLATE_4BIT 1
+#define INKPLATE_3BIT 1
 
 static void ckvClock();
 static void usleep1();
@@ -97,8 +97,8 @@ class Inkplate : public Adafruit_GFX {
     const uint32_t waveform[50] = {0x00000008, 0x00000008, 0x00200408, 0x80281888, 0x60a81898, 0x60a8a8a8, 0x60a8a8a8, 0x6068a868, 0x6868a868, 0x6868a868, 0x68686868, 0x6a686868, 0x5a686868, 0x5a686868, 0x5a586a68, 0x5a5a6a68, 0x5a5a6a68, 0x55566a68, 0x55565a64, 0x55555654, 0x55555556, 0x55555556, 0x55555556, 0x55555516, 0x55555596, 0x15555595, 0x95955595, 0x95959595, 0x95949495, 0x94949495, 0x94949495, 0xa4949494, 0x9494a4a4, 0x84a49494, 0x84948484, 0x84848484, 0x84848484, 0x84848484, 0xa5a48484, 0xa9a4a4a8, 0xa9a8a8a8, 0xa5a9a9a4, 0xa5a5a5a4, 0xa1a5a5a1, 0xa9a9a9a9, 0xa9a9a9a9, 0xa9a9a9a9, 0xa9a9a9a9, 0x15151515, 0x11111111};
 
     //Settings for contrast. Basicly, each element in array describes how many times each color is written to display (starting form darkest to lightest).
-    //This is for 4 bit mode, but you can expant to 8 bit mode if you want, by adding more wariables, changing display seqence in display4Bit() and expanding the memory buffer size to double the current size.
-    const uint8_t contrast_cycles[4] = {1, 1, 1, 1};
+    //This is for 3 bit mode, but you can expant to 8 bit mode if you want, by adding more wariables, changing display seqence in display4Bit() and expanding the memory buffer size to double the current size.
+    const uint8_t contrast_cycles[3] = {1, 2, 2};
     const uint8_t sz_contrast_cycles = sizeof(contrast_cycles) / sizeof(uint8_t);
 
     void drawPixel(int16_t x0, int16_t y0, uint16_t color);
@@ -112,7 +112,7 @@ class Inkplate : public Adafruit_GFX {
     void end_frame();
     void begin_line();
     void end_line();
-    void drawBitmap4(int16_t _x, int16_t _y, const unsigned char* _p, int16_t _w, int16_t _h);
+    void drawBitmap3Bit(int16_t _x, int16_t _y, const unsigned char* _p, int16_t _w, int16_t _h);
     void fillScreen(uint8_t c);
     void cleanFast(uint8_t c);
     void clean();
@@ -128,7 +128,7 @@ class Inkplate : public Adafruit_GFX {
 
   private:
     void display1b();
-    void display4b();
+    void display3b();
     uint8_t _panelOn=0;
     uint8_t _rotation = 0;
     uint16_t _tempRotation;

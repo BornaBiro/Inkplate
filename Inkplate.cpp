@@ -50,7 +50,7 @@ void Inkplate::begin(void) {
     memset(D_memory_new, 0, 60000);
   }
 
-  //4 bit per pixel mode (16 level grayscale mode)
+  //3 bit per pixel mode (8 level grayscale mode)
   if (_displayMode == 1) {
     D_memory4Bit = (uint8_t*)ps_malloc(249600);
     if (D_memory4Bit == NULL ) {
@@ -66,7 +66,7 @@ void Inkplate::clearDisplay() {
   //Clear 1 bit per pixel display buffer
   if (_displayMode == 0) memset(D_memory_new, 0, 60000);
 
-  //Clear 4 bit per pixel display buffer
+  //Clear 3 bit per pixel display buffer
   if (_displayMode == 1) memset(D_memory4Bit, 255, 249600);
 }
 
@@ -197,7 +197,7 @@ void Inkplate::drawPixel(int16_t x0, int16_t y0, uint16_t color) {
     //D_memory_new[100 * y0 + x] = ~pixelMaskLUT[x_sub] & temp | (color ? pixelMaskLUT[x_sub] : 0); //-->> Doesn't work with index
     *(D_memory_new + 100 * y0 + x) = ~pixelMaskLUT[x_sub] & temp | (color ? pixelMaskLUT[x_sub] : 0);
   } else {
-    color &= 15;
+    color &= 7;
     int x = x0 / 2;
     int x_sub = x0 % 2;
     uint8_t temp;
@@ -211,7 +211,7 @@ void Inkplate::drawPixel(int16_t x0, int16_t y0, uint16_t color) {
 //Function that displays content from RAM to screen
 void Inkplate::display() {
   if (_displayMode == 0) display1b();
-  if (_displayMode == 1) display4b();
+  if (_displayMode == 1) display3b();
 }
 
 //Display content from RAM to display (1 bit per pixel,. monochrome picture).
@@ -233,13 +233,12 @@ void Inkplate::display1b() {
   //  delayMicroseconds(500);
   //}
 
-  for (int i = 0; i < 3; i++) {
+  for (int i = 0; i < 1; i++) {
     cleanFast(1);
     //delayMicroseconds(500);
   }
-  cleanFast(2);
 
-  for (int k = 0; k < 7; k++) {
+  for (int k = 0; k < 5; k++) {
     begin_frame();
     for (int i = 599; i >= 0; i--) {
       //data = 10101010;
@@ -268,11 +267,12 @@ void Inkplate::display1b() {
     //delayMicroseconds(500);
   }
   cleanFast(2);
+  delayMicroseconds(500);
   draw_mode_off();
 }
 
-//Display content from RAM to display (4 bit per pixel,. 16 level of grayscale, STILL IN PROGRESSS, we need correct wavefrom to get good picture, use it only for pictures not for GFX).
-void Inkplate::display4b() {
+//Display content from RAM to display (3 bit per pixel,. 8 level of grayscale, STILL IN PROGRESSS, we need correct wavefrom to get good picture, use it only for pictures not for GFX).
+void Inkplate::display3b() {
   draw_mode_on();
   SPV_SET;
   delayMicroseconds(500);
@@ -329,8 +329,10 @@ void Inkplate::display4b() {
       }
       end_frame();
     }
+	cleanFast(2);
   }
-  cleanFast(2);
+  
+  delayMicroseconds(500);
   draw_mode_off();
 }
 
@@ -341,8 +343,8 @@ void ckvClock() {
   usleep1();
 }
 
-void Inkplate::drawBitmap4(int16_t _x, int16_t _y, const unsigned char* _p, int16_t _w, int16_t _h) {
-  if (_displayMode != INKPLATE_4BIT) return;
+void Inkplate::drawBitmap3Bit(int16_t _x, int16_t _y, const unsigned char* _p, int16_t _w, int16_t _h) {
+  if (_displayMode != INKPLATE_3BIT) return;
   uint8_t  _rem = _w % 2;
   int i, j;
   int xSize = _w / 2 + _rem;
@@ -355,11 +357,11 @@ void Inkplate::drawBitmap4(int16_t _x, int16_t _y, const unsigned char* _p, int1
 
   for (i = 0; i < _h; i++) {
     for (j = 0; j < xSize - 1; j++) {
-      drawPixel((j * 2) + _x, i + _y, *(_p + xSize * (i) + j) >> 4);
-      drawPixel((j * 2) + 1 + _x, i + _y, *(_p + xSize * (i) + j) & 0xff);
+      drawPixel((j * 2) + _x, i + _y, (*(_p + xSize * (i) + j) >> 4)>>1);
+      drawPixel((j * 2) + 1 + _x, i + _y, (*(_p + xSize * (i) + j) & 0xff)>>1);
     }
-    drawPixel((j * 2) + _x, i + _y, *(_p + xSize * (i) + j) >> 4);
-    if (_rem == 0) drawPixel((j * 2) + 1 + _x, i + _y, *(_p + xSize * (i) + j) & 0xff);
+    drawPixel((j * 2) + _x, i + _y, (*(_p + xSize * (i) + j) >> 4)>>1);
+    if (_rem == 0) drawPixel((j * 2) + 1 + _x, i + _y, (*(_p + xSize * (i) + j) & 0xff)>>1);
   }
 }
 
@@ -467,7 +469,7 @@ void Inkplate::einkOn() {
   //Set VCOM Voltage
   Wire.beginTransmission(0x48);
   Wire.write(0x03);
-  Wire.write(192);
+  Wire.write(178);
   Wire.endTransmission();
   //Set power up times (all on 3mS)
   Wire.beginTransmission(0x48);
@@ -595,7 +597,7 @@ void Inkplate::selectDisplayMode(uint8_t _mode) {
     _displayMode = INKPLATE_1BIT;
   }
 
-  if (_mode == INKPLATE_4BIT) {
+  if (_mode == INKPLATE_3BIT) {
     if (D_memory_new != NULL) free(D_memory_new);
     //4 bit per pixel mode (16 level grayscale mode)
     D_memory4Bit = (uint8_t*)ps_malloc(249600);
@@ -605,7 +607,7 @@ void Inkplate::selectDisplayMode(uint8_t _mode) {
       } while (true);
     }
     memset(D_memory4Bit, 255, 249600);
-    _displayMode = INKPLATE_4BIT;
+    _displayMode = INKPLATE_3BIT;
   }
 }
 
