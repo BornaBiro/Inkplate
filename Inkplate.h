@@ -101,7 +101,7 @@ class Inkplate : public Adafruit_GFX {
 
     //Settings for contrast. Basicly, each element in array describes how many times each color is written to display (starting form darkest to lightest).
     //This is for 3 bit mode, but you can expant to 8 bit mode if you want, by adding more wariables, changing display seqence in display4Bit() and expanding the memory buffer size to double the current size.
-    const uint8_t contrast_cycles[3] = {1, 2, 2};
+    const uint8_t contrast_cycles[3] = {2, 2, 2};
     const uint8_t sz_contrast_cycles = sizeof(contrast_cycles) / sizeof(uint8_t);
 
     void drawPixel(int16_t x0, int16_t y0, uint16_t color);

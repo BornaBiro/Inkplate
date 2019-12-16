@@ -80,6 +80,7 @@ void Inkplate::clearDisplay() {
 
 void Inkplate::draw_mode_on() {
   einkOn();
+  delay(10);
   SPH_SET;
   SPV_SET;
   delay(1);
@@ -140,7 +141,7 @@ void Inkplate::begin_line() {
 
 void Inkplate::end_line() {
   SPH_SET;
-  //usleep1();
+  //usleep1();		//1us pause
 
   CKV_CLEAR;
   //CL_SET;
@@ -230,7 +231,8 @@ void Inkplate::display1b() {
   draw_mode_on();
   SPV_SET;
   delayMicroseconds(500);
-
+  
+  //Old way of displaying image. First clear display by sending black image to whole screen, than white and then black image again.
   //for (int i = 0; i < 6; i++) {
   //  cleanFast(1);
   //  delayMicroseconds(500);
@@ -241,11 +243,13 @@ void Inkplate::display1b() {
   //  delayMicroseconds(500);
   //}
 
+  //Write whole screen in black to get better contrast and details
   for (int i = 0; i < 1; i++) {
     cleanFast(1);
     //delayMicroseconds(500);
   }
 
+  //Write pixels to screen. Each byte in RAM holds 8 pixels in monochrome mode
   for (int k = 0; k < 5; k++) {
     begin_frame();
     for (int i = 599; i >= 0; i--) {
@@ -256,6 +260,7 @@ void Inkplate::display1b() {
       //CL_SET;
       CL_CLEAR;
       begin_line();
+      //We are going to display image, but upside down, that's the reason why loop goes in the other way (by decresing i and j variables).
       for (int j = 99; j >= 0; j--) {
         _pos = i * 100 + j;
         data = LUT2[(*(D_memory_new + _pos) >> 4)];
@@ -274,13 +279,19 @@ void Inkplate::display1b() {
     end_frame();
     //delayMicroseconds(500);
   }
+  
+  //Discharge screen
   cleanFast(2);
+  //Wait a little to discharge
   delayMicroseconds(500);
+  //End writing image to screen
   draw_mode_off();
 }
 
 //Display content from RAM to display (3 bit per pixel,. 8 level of grayscale, STILL IN PROGRESSS, we need correct wavefrom to get good picture, use it only for pictures not for GFX).
 void Inkplate::display3b() {
+  cleanFast(0);
+  cleanFast(0);
   draw_mode_on();
   SPV_SET;
   delayMicroseconds(500);
@@ -337,9 +348,8 @@ void Inkplate::display3b() {
       }
       end_frame();
     }
-	cleanFast(2);
   }
-  
+  cleanFast(2);
   delayMicroseconds(500);
   draw_mode_off();
 }
@@ -495,8 +505,8 @@ void Inkplate::einkOn() {
   Wire.write(0);
   Wire.endTransmission();
   
-  VCOM_SET;
   PWRUP_SET;
+  VCOM_SET;
   
   delay(5);
   
@@ -511,6 +521,7 @@ void Inkplate::einkOn() {
   Wire.write(0x00);
   Wire.endTransmission();
   
+  //Temperature readout. NOTE: It's only possible when TPS65186 is powered up, otherwise it will read garbage.
   Wire.requestFrom(0x48, 1);
   _temperature = Wire.read();
 
@@ -525,15 +536,15 @@ void Inkplate::einkOff() {
   GMOD_CLEAR;
   SPV_CLEAR;
 
+  VCOM_CLEAR;
   PWRUP_CLEAR;
-  //Enable all rails
+  //Disable all rails
   Wire.beginTransmission(0x48);
   Wire.write(0x01);
   Wire.write(B00000000);
   Wire.endTransmission();
-  delay(250);
+  //delay(250);
   WAKEUP_CLEAR;
-  VCOM_CLEAR;
 
   pinsZstate();
 }
@@ -622,14 +633,14 @@ void Inkplate::selectDisplayMode(uint8_t _mode) {
 
   if (_mode == INKPLATE_3BIT) {
     if (D_memory_new != NULL) free(D_memory_new);
-    //4 bit per pixel mode (16 level grayscale mode)
-    D_memory4Bit = (uint8_t*)ps_malloc(249600);
+    //3 bit per pixel mode (16 level grayscale mode)
+    D_memory4Bit = (uint8_t*)ps_malloc(240000);
     if (D_memory4Bit == NULL ) {
       do {
         delay(100);
       } while (true);
     }
-    memset(D_memory4Bit, 255, 249600);
+    memset(D_memory4Bit, 255, 240000);	//800*600*0.5 (0.5 because we can fit to pixels into one byte)
     _displayMode = INKPLATE_3BIT;
   }
 }
