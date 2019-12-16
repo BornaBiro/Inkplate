@@ -202,8 +202,7 @@ void Inkplate::drawPixel(int16_t x0, int16_t y0, uint16_t color) {
   if (_displayMode == 0) {
     int x = x0 / 8;
     int x_sub = x0 % 8;
-    uint8_t temp = *(D_memory_new + 100 * y0 + x); //D_memory_new[99 * y0 + x];                     //-->> Doesn't work with index
-    //D_memory_new[100 * y0 + x] = ~pixelMaskLUT[x_sub] & temp | (color ? pixelMaskLUT[x_sub] : 0); //-->> Doesn't work with index
+    uint8_t temp = *(D_memory_new + 100 * y0 + x);
     *(D_memory_new + 100 * y0 + x) = ~pixelMaskLUT[x_sub] & temp | (color ? pixelMaskLUT[x_sub] : 0);
   } else {
     color &= 7;
@@ -312,8 +311,8 @@ void Inkplate::display3b() {
         begin_line();
         for (int j = 0; j < 100; j++) {
 
-          uint8_t pixel = 0B00000000;
-          uint8_t pixel2 = 0B00000000;
+          uint8_t pixel = B00000000;
+          uint8_t pixel2 = B00000000;
 
           //4 bit mode (non-reversed bits)
           pix1 = (*(dp) >> k) & 1;  //4, 5, 6, 7
@@ -367,12 +366,6 @@ void Inkplate::drawBitmap3Bit(int16_t _x, int16_t _y, const unsigned char* _p, i
   int i, j;
   int xSize = _w / 2 + _rem;
 
-  //if (_shiftX == 0) {
-  //  for (int i = _y; i < _y + _h; i++) {
-  //    memcpy(D_memory4Bit + (400 * i) + _x/2, _p + _w/2 * (i-_y), _w / 2);
-  //  }
-  //}
-
   for (i = 0; i < _h; i++) {
     for (j = 0; j < xSize - 1; j++) {
       drawPixel((j * 2) + _x, i + _y, (*(_p + xSize * (i) + j) >> 4)>>1);
@@ -424,7 +417,6 @@ void Inkplate::clean() {
     cleanFast((waveform[m] >> 30) & 3); //White to white
     m++;
   }
-  //cleanFast(0);
   cleanFast((waveform[m] >> 24) & 3); //white to black
   m++;
   for (int i = 0; i < 8; i++) {
